@@ -8,7 +8,8 @@ import java.util.LinkedList;
 @Data
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public abstract class Air extends Entity{
+public abstract class Air extends Entity {
+    private String type;
     private double humidity;
     private double temperature;
     private double oxygenLevel;
@@ -17,6 +18,7 @@ public abstract class Air extends Entity{
     private boolean isToxic;
 
     public Air(AirInput airInput) {
+        type = airInput.getType();
         this.setName(airInput.getName());
         this.setMass(airInput.getMass());
         humidity = airInput.getHumidity();
