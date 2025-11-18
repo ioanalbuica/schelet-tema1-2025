@@ -3,10 +3,14 @@ package main;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import fileio.CommandInput;
 import fileio.InputLoader;
+import fileio.SimulationInput;
 
+import java.util.ArrayList;
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * The entry point to this homework. It runs the checker that tests your implementation.
@@ -29,7 +33,17 @@ public final class Main {
 
         InputLoader inputLoader = new InputLoader(inputPath);
         ArrayNode output = MAPPER.createArrayNode();
+        ArrayList<SimulationInput> sims = inputLoader.getSimulations();
+        ArrayList<CommandInput> cmds = inputLoader.getCommands();
 
+        int sim_index = -1;
+        for (CommandInput cmd : cmds) {
+            if (cmd.getCommand().equals("startSimulation")) {
+                sim_index++;
+                SimulationInput sim = sims.get(sim_index);
+                Map map = new Map(sim);
+            }
+        }
         /*
          * TODO Implement your function here
          *
