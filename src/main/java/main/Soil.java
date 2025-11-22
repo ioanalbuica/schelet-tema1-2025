@@ -42,6 +42,7 @@ class ForestSoil extends Soil {
         super(soilInput);
         leafLitter = soilInput.getLeafLitter();
         calculateSoilQuality();
+        setBlockingPossibility((getWaterRetention() * 0.6 + leafLitter * 0.4) / 80 * 100);
     }
 
     @Override
@@ -82,6 +83,7 @@ class SwampSoil extends Soil {
         super(soilInput);
         waterLogging = soilInput.getWaterLogging();
         calculateSoilQuality();
+        setBlockingPossibility(waterLogging * 10);
     }
 
     @Override
@@ -122,6 +124,7 @@ class DesertSoil extends Soil {
         super(soilInput);
         salinity = soilInput.getSalinity();
         calculateSoilQuality();
+        setBlockingPossibility((100 - getWaterRetention() + salinity) / 100 * 100);
     }
 
     @Override
@@ -162,6 +165,7 @@ class GrasslandSoil extends Soil {
         super(soilInput);
         rootDensity = soilInput.getRootDensity();
         calculateSoilQuality();
+        setBlockingPossibility(((50 - rootDensity) + getWaterRetention() * 0.5) / 75 * 100);
     }
 
     @Override
@@ -202,7 +206,7 @@ class TundraSoil extends Soil {
         super(soilInput);
         permafrostDepth = soilInput.getPermafrostDepth();
         calculateSoilQuality();
-
+        setBlockingPossibility((50 - permafrostDepth) / 50 * 100);
     }
 
     @Override

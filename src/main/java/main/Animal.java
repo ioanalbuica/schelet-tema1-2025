@@ -13,14 +13,12 @@ import java.util.LinkedList;
 public abstract class Animal extends Entity {
     private String type;
     private String state;
-    private double attackProbability;
 
     public Animal(AnimalInput animalInput) {
         type = animalInput.getType();
         setName(animalInput.getName());
         setMass(animalInput.getMass());
     }
-    abstract void calculateAttackProbability();
 
     @Override
     public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
@@ -38,11 +36,9 @@ public abstract class Animal extends Entity {
 class Herbivores extends Animal {
     public Herbivores(AnimalInput animalInput) {
         super(animalInput);
+        setBlockingPossibility(1.5);
     }
 
-    public void calculateAttackProbability() {
-        setAttackProbability(1.5);
-    }
     @Override
     public void changeEnvironment(LinkedList<Entity> entitiesList) {
 
@@ -55,11 +51,9 @@ class Herbivores extends Animal {
 class Carnivores extends Animal {
     public Carnivores(AnimalInput animalInput) {
         super(animalInput);
+        setBlockingPossibility(7);
     }
 
-    public void calculateAttackProbability() {
-        setAttackProbability(7);
-    }
     @Override
     public void changeEnvironment(LinkedList<Entity> entitiesList) {
 
@@ -72,11 +66,9 @@ class Carnivores extends Animal {
 class Omnivores extends Animal {
     public Omnivores(AnimalInput animalInput) {
         super(animalInput);
+        setBlockingPossibility(4);
     }
 
-    public void calculateAttackProbability() {
-        setAttackProbability(4);
-    }
     @Override
     public void changeEnvironment(LinkedList<Entity> entitiesList) {
 
@@ -89,11 +81,9 @@ class Omnivores extends Animal {
 class Detritivores extends Animal {
     public Detritivores(AnimalInput animalInput) {
         super(animalInput);
+        setBlockingPossibility(1);
     }
 
-    public void calculateAttackProbability() {
-        setAttackProbability(1);
-    }
     @Override
     public void changeEnvironment(LinkedList<Entity> entitiesList) {
 
@@ -106,11 +96,9 @@ class Detritivores extends Animal {
 class Parasites extends Animal {
     public Parasites(AnimalInput animalInput) {
         super(animalInput);
+        setBlockingPossibility(9);
     }
 
-    public void calculateAttackProbability() {
-        setAttackProbability(9);
-    }
     @Override
     public void changeEnvironment(LinkedList<Entity> entitiesList) {
 

@@ -49,7 +49,7 @@ public final class Main {
                 SimulationInput sim = sims.get(sim_index);
                 map = new Map(sim);
                 terraBot = new TerraBot();
-
+                terraBot.setBatteryLevel(sim.getEnergyPoints());
                 // add startSimulation output
                 ObjectNode startNode = MAPPER.createObjectNode();
                 startNode.put("command", "startSimulation");
@@ -117,6 +117,21 @@ public final class Main {
                 endNode.put("message", "Simulation has ended.");
                 endNode.put("timestamp", cmd.getTimestamp());
                 output.add(endNode);
+            } else if (cmd.getCommand().equals("moveRobot")) {
+                int rez = terraBot.move(map);
+                if (rez == 0) {
+                    ObjectNode Node = MAPPER.createObjectNode();
+                    Node.put("command", "moveRobot");
+                    Node.put("message", "The robot has successfully moved to position (" + terraBot.getX() + ", " + terraBot.getY() + ").");
+                    Node.put("timestamp", cmd.getTimestamp());
+                    output.add(Node);
+                } else {
+                    ObjectNode Node = MAPPER.createObjectNode();
+                    Node.put("command", "moveRobot");
+                    Node.put("message", "ERROR: Not enough battery left. Cannot perform action");
+                    Node.put("timestamp", cmd.getTimestamp());
+                    output.add(Node);
+                }
             }
 
         }

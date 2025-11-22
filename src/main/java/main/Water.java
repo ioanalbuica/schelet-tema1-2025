@@ -42,6 +42,7 @@ public class Water extends Entity{
         turbidity = waterInput.getTurbidity();
         contaminantIndex = waterInput.getContaminantIndex();
         isFrozen = waterInput.isFrozen();
+        setBlockingPossibility(0);
     }
 
     @Override

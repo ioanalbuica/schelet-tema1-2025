@@ -41,6 +41,7 @@ class TropicalAir extends Air {
         super(airInput);
         co2Level = airInput.getCo2Level();
         calculateAirQuality();
+        setBlockingPossibility(getToxicityLevel());
     }
 
     @Override
@@ -58,7 +59,7 @@ class TropicalAir extends Air {
         setAirQuality(finalScore);
 
         double maxScore = 82.0;
-        double toxicityAQ = 100.0 * (1.0 - rawScore / maxScore);
+        double toxicityAQ = 100.0 * (1.0 - finalScore / maxScore);
         double toxicityFinal = Math.round(toxicityAQ * 100.0) / 100.0;
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
@@ -89,6 +90,7 @@ class PolarAir extends Air {
         super(airInput);
         iceCrystalConcentration = airInput.getIceCrystalConcentration();
         calculateAirQuality();
+        setBlockingPossibility(getToxicityLevel());
     }
 
     @Override
@@ -106,7 +108,7 @@ class PolarAir extends Air {
         setAirQuality(finalScore);
 
         double maxScore = 142.0;
-        double toxicityAQ = 100.0 * (1.0 - rawScore / maxScore);
+        double toxicityAQ = 100.0 * (1.0 - finalScore / maxScore);
         double toxicityFinal = Math.round(toxicityAQ * 100.0) / 100.0;
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
@@ -137,6 +139,7 @@ class TemperateAir extends Air {
         super(airInput);
         pollenLevel = airInput.getPollenLevel();
         calculateAirQuality();
+        setBlockingPossibility(getToxicityLevel());
     }
 
     @Override
@@ -154,7 +157,7 @@ class TemperateAir extends Air {
         setAirQuality(finalScore);
 
         double maxScore = 84.0;
-        double toxicityAQ = 100.0 * (1.0 - rawScore / maxScore);
+        double toxicityAQ = 100.0 * (1.0 - finalScore / maxScore);
         double toxicityFinal = Math.round(toxicityAQ * 100.0) / 100.0;
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
@@ -185,6 +188,7 @@ class DesertAir extends Air {
         super(airInput);
         dustParticles = airInput.getDustParticles();
         calculateAirQuality();
+        setBlockingPossibility(getToxicityLevel());
     }
 
     @Override
@@ -202,7 +206,7 @@ class DesertAir extends Air {
         setAirQuality(finalScore);
 
         double maxScore = 65.0;
-        double toxicityAQ = 100.0 * (1.0 - rawScore / maxScore);
+        double toxicityAQ = 100.0 * (1.0 - finalScore / maxScore);
         double toxicityFinal = Math.round(toxicityAQ * 100.0) / 100.0;
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
@@ -233,6 +237,7 @@ class MountainAir extends Air {
         super(airInput);
         altitude = airInput.getAltitude();
         calculateAirQuality();
+        setBlockingPossibility(getToxicityLevel());
     }
 
     @Override
@@ -251,7 +256,7 @@ class MountainAir extends Air {
         setAirQuality(finalScore);
 
         double maxScore = 78.0;
-        double toxicityAQ = 100.0 * (1.0 - rawScore / maxScore);
+        double toxicityAQ = 100.0 * (1.0 - finalScore / maxScore);
         double toxicityFinal = Math.round(toxicityAQ * 100.0) / 100.0;
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
