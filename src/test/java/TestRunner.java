@@ -90,18 +90,12 @@ public class TestRunner {
             assertThatJson(outputJson).isEqualTo(refJson);
             devmindResults.add(new DevmindResult(
                 testName,
-                inputJson,
-                outputJson,
-                refJson,
                 PASSED,
                 points
             ));
         } catch (AssertionError e) {
             devmindResults.add(new DevmindErrorResult(
                     testName,
-                    inputJson,
-                    outputJson,
-                    refJson,
                     points,
                     e.getMessage()
             ));
@@ -135,20 +129,15 @@ public class TestRunner {
             devmindResults.add(new DevmindResult(
                     "checkstyle",
                     "",
-                    "",
-                    errorCount,
-                    PASSED,
                     CheckerConstants.CHECKSTYLE_POINTS
             ));
             System.out.println(checkStyleErrors);
+            TestCaseWatcher.totalPoints += CheckerConstants.CHECKSTYLE_POINTS;
         }
         catch (AssertionError e) {
             devmindResults.add(new DevmindErrorResult(
                     "checkstyle",
-                    "",
-                    "",
-                    errorCount,
-                    10,
+                    CheckerConstants.CHECKSTYLE_POINTS,
                     e.getMessage()
             ));
             throw new CheckstyleException(checkStyleErrors);
@@ -184,17 +173,12 @@ public class TestRunner {
             devmindResults.add(new DevmindResult(
                     "git",
                     "",
-                    "",
-                    "",
-                    PASSED,
                     CheckerConstants.GIT_POINTS
             ));
+            TestCaseWatcher.totalPoints += CheckerConstants.GIT_POINTS;
         } catch (IOException | AssertionError | GitAPIException e) {
             devmindResults.add(new DevmindErrorResult(
                     "git",
-                    "",
-                    "",
-                    "",
                     CheckerConstants.GIT_POINTS,
                     e.getMessage()
             ));
@@ -223,7 +207,7 @@ public class TestRunner {
                 .allMatch(result -> PASSED.equals(result.getStatus()));
 
         if (allPassed) {
-            System.out.println("Yey, ai reusit sa-l ajuti cu succes pe TerraBot sa descopere planeta \uD83D\uDE0A\"");
+            System.out.println("Yey, ai reusit sa-l ajuti cu succes pe TerraBot sa descopere planeta \uD83D\uDE0A\\");
             System.out.println("Uite un mic gest de recunostinta ❤");
             System.out.println("https://youtu.be/coXOFBjLjHI?si=IT1bHEOEs7kHea1m");
         }

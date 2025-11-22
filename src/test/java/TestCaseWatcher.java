@@ -14,7 +14,7 @@ public class TestCaseWatcher implements TestWatcher {
     public void testSuccessful(ExtensionContext context) {
         try {
             TestCaseData testCaseData = getTestCaseData(context);
-            stringBuilder.append("CASE - %s - %s/%s = PASSED\n".formatted(testCaseData.testName(), testCaseData.points()));
+            stringBuilder.append("CASE - %s - %s/%s = PASSED\n".formatted(testCaseData.testName(), testCaseData.points(), testCaseData.points()));
             totalPoints += testCaseData.points();
         }
         catch (IllegalArgumentException e) {
@@ -26,7 +26,7 @@ public class TestCaseWatcher implements TestWatcher {
     public void testFailed(ExtensionContext context, Throwable cause) {
         try {
             TestCaseData testCaseData = getTestCaseData(context);
-            stringBuilder.append("CASE - %s - 0/%s = FAILED\n".formatted(testCaseData.testName(), testCaseData.points(), testCaseData.points()));
+            stringBuilder.append("CASE - %s - 0/%s = FAILED\n".formatted(testCaseData.testName(), testCaseData.points()));
         }
         catch (IllegalArgumentException e) {
             // Do nothing
