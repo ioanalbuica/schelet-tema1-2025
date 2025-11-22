@@ -1,5 +1,7 @@
 package main;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.AirInput;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,6 +40,7 @@ class TropicalAir extends Air {
     public TropicalAir(AirInput airInput) {
         super(airInput);
         co2Level = airInput.getCo2Level();
+        calculateAirQuality();
     }
 
     @Override
@@ -60,6 +63,20 @@ class TropicalAir extends Air {
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode airNode = MAPPER.createObjectNode();
+        airNode.put("type", getType());
+        airNode.put("name", getName());
+        airNode.put("mass", getMass());
+        airNode.put("humidity", getHumidity());
+        airNode.put("temperature", getTemperature());
+        airNode.put("oxygenLevel", getOxygenLevel());
+        airNode.put("airQuality", getAirQuality());
+        airNode.put("co2Level", co2Level);
+        env.set("air", airNode);
+    }
 }
 
 @Data
@@ -71,6 +88,7 @@ class PolarAir extends Air {
     public PolarAir(AirInput airInput) {
         super(airInput);
         iceCrystalConcentration = airInput.getIceCrystalConcentration();
+        calculateAirQuality();
     }
 
     @Override
@@ -93,6 +111,20 @@ class PolarAir extends Air {
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode airNode = MAPPER.createObjectNode();
+        airNode.put("type", getType());
+        airNode.put("name", getName());
+        airNode.put("mass", getMass());
+        airNode.put("humidity", getHumidity());
+        airNode.put("temperature", getTemperature());
+        airNode.put("oxygenLevel", getOxygenLevel());
+        airNode.put("airQuality", getAirQuality());
+        airNode.put("iceCrystalConcentration", iceCrystalConcentration);
+        env.set("air", airNode);
+    }
 }
 
 @Data
@@ -104,6 +136,7 @@ class TemperateAir extends Air {
     public TemperateAir(AirInput airInput) {
         super(airInput);
         pollenLevel = airInput.getPollenLevel();
+        calculateAirQuality();
     }
 
     @Override
@@ -126,6 +159,20 @@ class TemperateAir extends Air {
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode airNode = MAPPER.createObjectNode();
+        airNode.put("type", getType());
+        airNode.put("name", getName());
+        airNode.put("mass", getMass());
+        airNode.put("humidity", getHumidity());
+        airNode.put("temperature", getTemperature());
+        airNode.put("oxygenLevel", getOxygenLevel());
+        airNode.put("airQuality", getAirQuality());
+        airNode.put("pollenLevel", pollenLevel);
+        env.set("air", airNode);
+    }
 }
 
 @Data
@@ -137,6 +184,7 @@ class DesertAir extends Air {
     public DesertAir(AirInput airInput) {
         super(airInput);
         dustParticles = airInput.getDustParticles();
+        calculateAirQuality();
     }
 
     @Override
@@ -159,6 +207,20 @@ class DesertAir extends Air {
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode airNode = MAPPER.createObjectNode();
+        airNode.put("type", getType());
+        airNode.put("name", getName());
+        airNode.put("mass", getMass());
+        airNode.put("humidity", getHumidity());
+        airNode.put("temperature", getTemperature());
+        airNode.put("oxygenLevel", getOxygenLevel());
+        airNode.put("airQuality", getAirQuality());
+        airNode.put("dustParticles", dustParticles);
+        env.set("air", airNode);
+    }
 }
 
 @Data
@@ -170,6 +232,7 @@ class MountainAir extends Air {
     public MountainAir(AirInput airInput) {
         super(airInput);
         altitude = airInput.getAltitude();
+        calculateAirQuality();
     }
 
     @Override
@@ -192,6 +255,20 @@ class MountainAir extends Air {
         double toxicityFinal = Math.round(toxicityAQ * 100.0) / 100.0;
         setToxicityLevel(toxicityFinal);
         setToxic(toxicityFinal > (0.8 * maxScore));
+    }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode airNode = MAPPER.createObjectNode();
+        airNode.put("type", getType());
+        airNode.put("name", getName());
+        airNode.put("mass", getMass());
+        airNode.put("humidity", getHumidity());
+        airNode.put("temperature", getTemperature());
+        airNode.put("oxygenLevel", getOxygenLevel());
+        airNode.put("airQuality", getAirQuality());
+        airNode.put("altitude", altitude);
+        env.set("air", airNode);
     }
 }
 

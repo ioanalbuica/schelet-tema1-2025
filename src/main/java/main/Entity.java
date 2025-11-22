@@ -1,5 +1,7 @@
 package main;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +14,8 @@ import java.util.LinkedList;
 public abstract class Entity {
     private String name;
     private double mass;
+    private double blockingPossibility;
 
     abstract public void changeEnvironment(LinkedList<Entity> entitiesList);
+    abstract public void printEntity(ObjectMapper MAPPER, ObjectNode env);
 }

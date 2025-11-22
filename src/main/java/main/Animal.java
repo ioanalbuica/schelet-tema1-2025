@@ -1,5 +1,7 @@
 package main;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.AnimalInput;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +21,15 @@ public abstract class Animal extends Entity {
         setMass(animalInput.getMass());
     }
     abstract void calculateAttackProbability();
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode animalNode = MAPPER.createObjectNode();
+        animalNode.put("type", getType());
+        animalNode.put("name", getName());
+        animalNode.put("mass", getMass());
+        env.set("animals", animalNode);
+    }
 }
 
 @Data

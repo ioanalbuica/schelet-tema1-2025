@@ -1,5 +1,7 @@
 package main;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.WaterInput;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +12,7 @@ import static java.lang.Math.abs;
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class Water extends Entity{
+    private String type;
     private double salinity;
     private double pH;
     private double purity;
@@ -30,6 +33,7 @@ public class Water extends Entity{
     }
 
     public Water(WaterInput waterInput) {
+        type = waterInput.getType();
         this.setMass(waterInput.getMass());
         this.setName(waterInput.getName());
         salinity = waterInput.getSalinity();
@@ -45,8 +49,12 @@ public class Water extends Entity{
 
     }
 
-
-
-
-
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode waterNode = MAPPER.createObjectNode();
+        waterNode.put("type", getType());
+        waterNode.put("name", getName());
+        waterNode.put("mass", getMass());
+        env.set("water", waterNode);
+    }
 }

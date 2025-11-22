@@ -1,5 +1,7 @@
 package main;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.SoilInput;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +20,8 @@ public abstract class Soil extends Entity {
     private double soilQuality;
 
     public Soil(SoilInput soilInput) {
+        type = soilInput.getType();
+        this.setName(soilInput.getName());
         this.setMass(soilInput.getMass());
         nitrogen = soilInput.getNitrogen();
         waterRetention = soilInput.getWaterRetention();
@@ -36,8 +40,8 @@ class ForestSoil extends Soil {
 
     public ForestSoil(SoilInput soilInput) {
         super(soilInput);
-        this.setType(soilInput.getType());
         leafLitter = soilInput.getLeafLitter();
+        calculateSoilQuality();
     }
 
     @Override
@@ -51,6 +55,21 @@ class ForestSoil extends Soil {
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode soilNode = MAPPER.createObjectNode();
+        soilNode.put("type", getType());
+        soilNode.put("name", getName());
+        soilNode.put("mass", getMass());
+        soilNode.put("nitrogen", getNitrogen());
+        soilNode.put("waterRetention", getWaterRetention());
+        soilNode.put("soilpH", getSoilPH());
+        soilNode.put("organicMatter", getOrganicMatter());
+        soilNode.put("soilQuality", getSoilQuality());
+        soilNode.put("leafLitter", leafLitter);
+        env.set("soil", soilNode);
+    }
 }
 
 @Data
@@ -61,8 +80,8 @@ class SwampSoil extends Soil {
 
     public SwampSoil(SoilInput soilInput) {
         super(soilInput);
-        this.setType(soilInput.getType());
         waterLogging = soilInput.getWaterLogging();
+        calculateSoilQuality();
     }
 
     @Override
@@ -76,6 +95,21 @@ class SwampSoil extends Soil {
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode soilNode = MAPPER.createObjectNode();
+        soilNode.put("type", getType());
+        soilNode.put("name", getName());
+        soilNode.put("mass", getMass());
+        soilNode.put("nitrogen", getNitrogen());
+        soilNode.put("waterRetention", getWaterRetention());
+        soilNode.put("soilpH", getSoilPH());
+        soilNode.put("organicMatter", getOrganicMatter());
+        soilNode.put("soilQuality", getSoilQuality());
+        soilNode.put("waterLogging", waterLogging);
+        env.set("soil", soilNode);
+    }
 }
 
 @Data
@@ -86,8 +120,8 @@ class DesertSoil extends Soil {
 
     public DesertSoil(SoilInput soilInput) {
         super(soilInput);
-        this.setType(soilInput.getType());
         salinity = soilInput.getSalinity();
+        calculateSoilQuality();
     }
 
     @Override
@@ -101,6 +135,21 @@ class DesertSoil extends Soil {
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode soilNode = MAPPER.createObjectNode();
+        soilNode.put("type", getType());
+        soilNode.put("name", getName());
+        soilNode.put("mass", getMass());
+        soilNode.put("nitrogen", getNitrogen());
+        soilNode.put("waterRetention", getWaterRetention());
+        soilNode.put("soilpH", getSoilPH());
+        soilNode.put("organicMatter", getOrganicMatter());
+        soilNode.put("soilQuality", getSoilQuality());
+        soilNode.put("salinity", salinity);
+        env.set("soil", soilNode);
+    }
 }
 
 @Data
@@ -111,8 +160,8 @@ class GrasslandSoil extends Soil {
 
     public GrasslandSoil(SoilInput soilInput) {
         super(soilInput);
-        this.setType(soilInput.getType());
         rootDensity = soilInput.getRootDensity();
+        calculateSoilQuality();
     }
 
     @Override
@@ -126,6 +175,21 @@ class GrasslandSoil extends Soil {
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
     }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode soilNode = MAPPER.createObjectNode();
+        soilNode.put("type", getType());
+        soilNode.put("name", getName());
+        soilNode.put("mass", getMass());
+        soilNode.put("nitrogen", getNitrogen());
+        soilNode.put("waterRetention", getWaterRetention());
+        soilNode.put("soilpH", getSoilPH());
+        soilNode.put("organicMatter", getOrganicMatter());
+        soilNode.put("soilQuality", getSoilQuality());
+        soilNode.put("rootDensity", rootDensity);
+        env.set("soil", soilNode);
+    }
 }
 
 @Data
@@ -136,8 +200,9 @@ class TundraSoil extends Soil {
 
     public TundraSoil(SoilInput soilInput) {
         super(soilInput);
-        this.setType(soilInput.getType());
         permafrostDepth = soilInput.getPermafrostDepth();
+        calculateSoilQuality();
+
     }
 
     @Override
@@ -150,6 +215,21 @@ class TundraSoil extends Soil {
         double score = 	(this.getNitrogen() * 0.7) + (this.getOrganicMatter() * 0.5) - (permafrostDepth * 1.5);
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
+    }
+
+    @Override
+    public void printEntity(ObjectMapper MAPPER, ObjectNode env) {
+        ObjectNode soilNode = MAPPER.createObjectNode();
+        soilNode.put("type", getType());
+        soilNode.put("name", getName());
+        soilNode.put("mass", getMass());
+        soilNode.put("nitrogen", getNitrogen());
+        soilNode.put("waterRetention", getWaterRetention());
+        soilNode.put("soilpH", getSoilPH());
+        soilNode.put("organicMatter", getOrganicMatter());
+        soilNode.put("soilQuality", getSoilQuality());
+        soilNode.put("permafrostDepth", permafrostDepth);
+        env.set("soil", soilNode);
     }
 }
 
