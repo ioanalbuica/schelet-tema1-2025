@@ -15,7 +15,9 @@ public abstract class Entity {
     private String name;
     private double mass;
     private double blockingPossibility;
+    private int scannedTime = 0;
 
-    abstract public void changeEnvironment(LinkedList<Entity> entitiesList);
+    abstract public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList);
     abstract public void printEntity(ObjectMapper MAPPER, ObjectNode env);
+    public abstract Entity createDeepCopy();
 }

@@ -34,8 +34,8 @@ public class Water extends Entity{
 
     public Water(WaterInput waterInput) {
         type = waterInput.getType();
-        this.setMass(waterInput.getMass());
-        this.setName(waterInput.getName());
+        setMass(waterInput.getMass());
+        setName(waterInput.getName());
         salinity = waterInput.getSalinity();
         pH = waterInput.getPH();
         purity = waterInput.getPurity();
@@ -43,11 +43,55 @@ public class Water extends Entity{
         contaminantIndex = waterInput.getContaminantIndex();
         isFrozen = waterInput.isFrozen();
         setBlockingPossibility(0);
+        calculateWaterQuality();
+    }
+
+    public Water(Water other) {
+        setName(other.getName());
+        setMass(other.getMass());
+        setScannedTime(other.getScannedTime());
+        setBlockingPossibility(other.getBlockingPossibility());
+        type = other.type;
+        salinity = other.salinity;
+        pH = other.pH;
+        purity = other.purity;
+        turbidity = other.turbidity;
+        contaminantIndex = other.contaminantIndex;
+        isFrozen = other.isFrozen;
+        waterQuality = other.waterQuality;
     }
 
     @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
+    public Entity createDeepCopy() {
+        return new Water(this);
+    }
 
+    @Override
+    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
+        for (Entity entity : entitiesList) {
+            if (entity instanceof Air a) {
+                if ((currentTime - getScannedTime()) % 2 == 0) {
+                    a.setHumidity(Math.round((a.getHumidity() + 0.1) * 100.0) / 100.0);
+                    a.calculateAirQuality();
+                    a.setBlockingPossibility(a.getToxicityLevel());
+                }
+            } else if (entity instanceof Soil s) {
+                if ((currentTime - getScannedTime()) % 2 == 0) {
+                    s.setWaterRetention(Math.round((s.getWaterRetention() + 0.1) * 100.0) / 100.0);
+                    s.calculateSoilQuality();
+                    s.calculateBlockingPossibility();
+                }
+            } else if (entity instanceof Plant p && p.getScannedTime() > 0) {
+                p.setGrowthLevel(p.getGrowthLevel() + 0.2);
+                if (p.getGrowthLevel() >= 1.0) {
+                    p.setGrowthLevel(0.0);
+                    p.setMaturityLevel(p.getMaturityLevel() + 1);
+                }
+                if (p.getMaturityLevel() == 3) {
+                    entitiesList.remove(entity);
+                }
+            }
+        }
     }
 
     @Override

@@ -1,10 +1,6 @@
 package main;
 
-import fileio.*;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import lombok.Data;
@@ -14,11 +10,21 @@ import lombok.NoArgsConstructor;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class TerraBot {
     private int x, y;
-    private double batteryLevel;
+    private int batteryLevel;
+    private ArrayList<Entity> inventory = new ArrayList<>();
+    private Map<String, List<String>> knowledgeBase = new HashMap<>();
 
-    public int move(Map map) {
-        int[] dy = {1, -1, 0, 0};
-        int[] dx = {0, 0, 1, -1};
+    public void addFact(String entityName, String fact) {
+        knowledgeBase.putIfAbsent(entityName, new ArrayList<>());
+        List<String> facts = knowledgeBase.get(entityName);
+        if (!facts.contains(fact)) {
+            facts.add(fact);
+        }
+    }
+
+    public int move(SimulationMap map) {
+        int[] dy = {1, 0, -1, 0};
+        int[] dx = {0, 1, 0, -1};
         boolean foundValid = false;
 
         int minimum = Integer.MAX_VALUE, minX = x, minY = y;

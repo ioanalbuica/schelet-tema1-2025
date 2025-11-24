@@ -12,12 +12,23 @@ import java.util.LinkedList;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public abstract class Plant extends Entity {
     private String type;
-    private int maturityLevel;
+    private double growthLevel = 0.0;
+    private int maturityLevel = 0;
 
     public Plant(PlantInput plantInput) {
         type = plantInput.getType();
         setMass(plantInput.getMass());
         setName(plantInput.getName());
+    }
+
+    public Plant(Plant other) {
+        setName(other.getName());
+        setMass(other.getMass());
+        type = other.getType();
+        growthLevel = other.getGrowthLevel();
+        maturityLevel = other.getMaturityLevel();
+        setScannedTime(other.getScannedTime());
+        setBlockingPossibility(other.getBlockingPossibility());
     }
 
     @Override
@@ -34,14 +45,37 @@ public abstract class Plant extends Entity {
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 class FloweringPlants extends Plant {
-    @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
     public FloweringPlants(PlantInput plantInput) {
         super(plantInput);
-        setBlockingPossibility(90);
+        setBlockingPossibility(0.9);
+    }
+
+    public FloweringPlants(FloweringPlants other) {
+        super(other);
+    }
+
+    @Override
+    public Entity createDeepCopy() {
+        return new FloweringPlants(this);
+    }
+
+    @Override
+    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
+        for (Entity entity : entitiesList) {
+            if (entity instanceof Air a) {
+                double maturityOxygenRate = 0.0;
+                if (this.getMaturityLevel() == 0) {
+                    maturityOxygenRate = 0.2;
+                } else if (this.getMaturityLevel() == 1) {
+                    maturityOxygenRate = 0.7;
+                } else if (this.getMaturityLevel() == 2) {
+                    maturityOxygenRate = 0.4;
+                }
+                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 6 + maturityOxygenRate) * 100.0) / 100.0);
+                a.calculateAirQuality();
+                a.setBlockingPossibility(a.getToxicityLevel());
+            }
+        }
     }
 }
 
@@ -49,14 +83,37 @@ class FloweringPlants extends Plant {
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 class GymnospermsPlants extends Plant {
-    @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
     public GymnospermsPlants(PlantInput plantInput) {
         super(plantInput);
-        setBlockingPossibility(60);
+        setBlockingPossibility(0.6);
+    }
+
+    public GymnospermsPlants(GymnospermsPlants other) {
+        super(other);
+    }
+
+    @Override
+    public Entity createDeepCopy() {
+        return new GymnospermsPlants(this);
+    }
+
+    @Override
+    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
+        for (Entity entity : entitiesList) {
+            if (entity instanceof Air a) {
+                double maturityOxygenRate = 0.0;
+                if (this.getMaturityLevel() == 0) {
+                    maturityOxygenRate = 0.2;
+                } else if (this.getMaturityLevel() == 1) {
+                    maturityOxygenRate = 0.7;
+                } else if (this.getMaturityLevel() == 2) {
+                    maturityOxygenRate = 0.4;
+                }
+                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0 + maturityOxygenRate) * 100.0) / 100.0);
+                a.calculateAirQuality();
+                a.setBlockingPossibility(a.getToxicityLevel());
+            }
+        }
     }
 }
 
@@ -64,14 +121,37 @@ class GymnospermsPlants extends Plant {
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 class Ferns extends Plant {
-    @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
     public Ferns(PlantInput plantInput) {
         super(plantInput);
-        setBlockingPossibility(30);
+        setBlockingPossibility(0.3);
+    }
+
+    public Ferns(Ferns other) {
+        super(other);
+    }
+
+    @Override
+    public Entity createDeepCopy() {
+        return new Ferns(this);
+    }
+
+    @Override
+    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
+        for (Entity entity : entitiesList) {
+            if (entity instanceof Air a) {
+                double maturityOxygenRate = 0.0;
+                if (this.getMaturityLevel() == 0) {
+                    maturityOxygenRate = 0.2;
+                } else if (this.getMaturityLevel() == 1) {
+                    maturityOxygenRate = 0.7;
+                } else if (this.getMaturityLevel() == 2) {
+                    maturityOxygenRate = 0.4;
+                }
+                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0 + maturityOxygenRate) * 100.0) / 100.0);
+                a.calculateAirQuality();
+                a.setBlockingPossibility(a.getToxicityLevel());
+            }
+        }
     }
 }
 
@@ -79,14 +159,37 @@ class Ferns extends Plant {
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 class Mosses extends Plant {
-    @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
     public Mosses(PlantInput plantInput) {
         super(plantInput);
-        setBlockingPossibility(40);
+        setBlockingPossibility(0.4);
+    }
+
+    public Mosses(Mosses other) {
+        super(other);
+    }
+
+    @Override
+    public Entity createDeepCopy() {
+        return new Mosses(this);
+    }
+
+    @Override
+    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
+        for (Entity entity : entitiesList) {
+            if (entity instanceof Air a) {
+                double maturityOxygenRate = 0.0;
+                if (this.getMaturityLevel() == 0) {
+                    maturityOxygenRate = 0.2;
+                } else if (this.getMaturityLevel() == 1) {
+                    maturityOxygenRate = 0.7;
+                } else if (this.getMaturityLevel() == 2) {
+                    maturityOxygenRate = 0.4;
+                }
+                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0.8 + maturityOxygenRate) * 100.0) / 100.0);
+                a.calculateAirQuality();
+                a.setBlockingPossibility(a.getToxicityLevel());
+            }
+        }
     }
 }
 
@@ -94,14 +197,37 @@ class Mosses extends Plant {
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 class Algae extends Plant {
-    @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
     public Algae(PlantInput plantInput) {
         super(plantInput);
-        setBlockingPossibility(20);
+        setBlockingPossibility(0.2);
+    }
+
+    public Algae(Algae other) {
+        super(other);
+    }
+
+    @Override
+    public Entity createDeepCopy() {
+        return new Algae(this);
+    }
+
+    @Override
+    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
+        for (Entity entity : entitiesList) {
+            if (entity instanceof Air a) {
+                double maturityOxygenRate = 0.0;
+                if (this.getMaturityLevel() == 0) {
+                    maturityOxygenRate = 0.2;
+                } else if (this.getMaturityLevel() == 1) {
+                    maturityOxygenRate = 0.7;
+                } else if (this.getMaturityLevel() == 2) {
+                    maturityOxygenRate = 0.4;
+                }
+                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0.5 + maturityOxygenRate) * 100.0) / 100.0);
+                a.calculateAirQuality();
+                a.setBlockingPossibility(a.getToxicityLevel());
+            }
+        }
     }
 }
 

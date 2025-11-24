@@ -29,7 +29,30 @@ public abstract class Soil extends Entity {
         organicMatter = soilInput.getOrganicMatter();
     }
 
-    abstract void calculateSoilQuality();
+    @Override
+    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
+        for (Entity entity : entitiesList) {
+            if (entity instanceof Plant p && p.getScannedTime() > 0) {
+                p.setGrowthLevel(p.getGrowthLevel() + 0.2);
+                if (p.getGrowthLevel() >= 1.0) {
+                    p.setGrowthLevel(0.0);
+                    p.setMaturityLevel(p.getMaturityLevel() + 1);
+                }
+                if (p.getMaturityLevel() == 3) {
+                    entitiesList.remove(entity);
+                }
+            }
+        }
+    }
+
+    @Override
+    public Entity createDeepCopy() {
+        return null;
+    }
+
+    abstract public void calculateSoilQuality();
+    abstract public void calculateBlockingPossibility();
+
 }
 
 @Data
@@ -42,16 +65,16 @@ class ForestSoil extends Soil {
         super(soilInput);
         leafLitter = soilInput.getLeafLitter();
         calculateSoilQuality();
+        calculateBlockingPossibility();
+    }
+
+    @Override
+    public void calculateBlockingPossibility() {
         setBlockingPossibility((getWaterRetention() * 0.6 + leafLitter * 0.4) / 80 * 100);
     }
 
     @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
-    @Override
-    void calculateSoilQuality() {
+    public void calculateSoilQuality() {
         double score = (this.getNitrogen() * 1.2) + (this.getOrganicMatter() * 2) + (this.getWaterRetention() * 1.5) + (this.getLeafLitter() * 0.3);
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
@@ -83,19 +106,19 @@ class SwampSoil extends Soil {
         super(soilInput);
         waterLogging = soilInput.getWaterLogging();
         calculateSoilQuality();
-        setBlockingPossibility(waterLogging * 10);
+        calculateBlockingPossibility();
     }
 
     @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
-    @Override
-    void calculateSoilQuality() {
+    public void calculateSoilQuality() {
         double score = (this.getNitrogen()* 1.1) + (this.getOrganicMatter() * 2.2) - (this.getWaterLogging() * 5);
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
+    }
+
+    @Override
+    public void calculateBlockingPossibility() {
+        setBlockingPossibility(waterLogging * 10);
     }
 
     @Override
@@ -124,19 +147,19 @@ class DesertSoil extends Soil {
         super(soilInput);
         salinity = soilInput.getSalinity();
         calculateSoilQuality();
-        setBlockingPossibility((100 - getWaterRetention() + salinity) / 100 * 100);
+        calculateBlockingPossibility();
     }
 
     @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
-    @Override
-    void calculateSoilQuality() {
+    public void calculateSoilQuality() {
         double score = (this.getNitrogen() * 0.5) + (this.getWaterRetention() * 0.3) - (salinity * 2);
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
+    }
+
+    @Override
+    public void calculateBlockingPossibility() {
+        setBlockingPossibility((100 - getWaterRetention() + salinity) / 100 * 100);
     }
 
     @Override
@@ -168,16 +191,17 @@ class GrasslandSoil extends Soil {
         setBlockingPossibility(((50 - rootDensity) + getWaterRetention() * 0.5) / 75 * 100);
     }
 
-    @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
 
     @Override
-    void calculateSoilQuality() {
+    public void calculateSoilQuality() {
         double score = (this.getNitrogen() * 1.3) + (this.getOrganicMatter() * 1.5) + (rootDensity * 0.8);
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
+    }
+
+    @Override
+    public void calculateBlockingPossibility() {
+        setBlockingPossibility(((50 - rootDensity) + getWaterRetention() * 0.5) / 75 * 100);
     }
 
     @Override
@@ -206,19 +230,19 @@ class TundraSoil extends Soil {
         super(soilInput);
         permafrostDepth = soilInput.getPermafrostDepth();
         calculateSoilQuality();
-        setBlockingPossibility((50 - permafrostDepth) / 50 * 100);
+        calculateBlockingPossibility();
     }
 
     @Override
-    public void changeEnvironment(LinkedList<Entity> entitiesList) {
-
-    }
-
-    @Override
-    void calculateSoilQuality() {
+    public void calculateSoilQuality() {
         double score = 	(this.getNitrogen() * 0.7) + (this.getOrganicMatter() * 0.5) - (permafrostDepth * 1.5);
         double normalizeScore = Math.max(0, Math.min(100, score));
         this.setSoilQuality(Math.round(normalizeScore * 100.0) / 100.0);
+    }
+
+    @Override
+    public void calculateBlockingPossibility() {
+        setBlockingPossibility((50 - permafrostDepth) / 50 * 100);
     }
 
     @Override
