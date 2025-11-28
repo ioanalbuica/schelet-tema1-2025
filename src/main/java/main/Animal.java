@@ -1,11 +1,12 @@
 package main;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import fileio.AnimalInput;
+import fileio.*;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.LinkedList;
 
 @Data
 @NoArgsConstructor
@@ -14,12 +15,15 @@ public abstract class Animal extends Entity {
     private String type;
     private String state;
     private double nextOrganicMatter = 0.0;
+    private int lastMovedTime = 0;
+    private boolean hasEaten = false;
 
     public Animal(AnimalInput animalInput) {
         type = animalInput.getType();
         setName(animalInput.getName());
         setMass(animalInput.getMass());
     }
+
     public Animal(Animal other) {
         setName(other.getName());
         setMass(other.getMass());
@@ -39,33 +43,58 @@ public abstract class Animal extends Entity {
         env.set("animals", animalNode);
     }
 
-    public void move(SimulationMap map, int x, int y) {
-        int[] dy = {1, 0, -1, 0};
-        int[] dx = {0, 1, 0, -1};
+    @Override
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        if (nextOrganicMatter > 0) {
+            Soil s = (Soil) map.getEntityMap()[y][x][EntitySlot.SOIL.idx()];
+            if (s != null) {
+                s.setOrganicMatter(s.getOrganicMatter() + nextOrganicMatter);
+                s.calculateSoilQuality();
+                s.calculateBlockingPossibility();
+            }
+            nextOrganicMatter = 0.0;
+        }
+    }
 
+    private boolean isCarnivoreOrParasite() {
+        return "Carnivores".equals(type) || "Parasites".equals(type);
+    }
+
+    public void move(int currentTime, SimulationMap map, int x, int y) {
+        Animal a = (Animal) map.getEntityMap()[y][x][EntitySlot.ANIMAL.idx()];
+        if ((currentTime - a.getLastMovedTime()) % 2 != 0 ||
+                a.getScannedTime() == 0) {
+            return;
+        }
+
+        a.setLastMovedTime(currentTime);
+        int[] dx = {0, 1, 0, -1};
+        int[] dy = {1, 0, -1, 0};
         int[] bestPW = null, bestP = null, bestW = null, bestAny = null;
         double maxQwPW = -1.0, maxQwW = -1.0;
 
+        Entity[][][] grid = map.getEntityMap();
         for (int k = 0; k < 4; k++) {
-            int ny = y + dy[k];
             int nx = x + dx[k];
+            int ny = y + dy[k];
 
             if (nx < 0 || nx >= map.getWidth() || ny < 0 || ny >= map.getHeight()) {
                 continue;
             }
 
-            boolean hasPlant = false;
-            boolean hasWater = false;
-            double currentWaterQuality = 0.0;
+            boolean destHasAnimal = grid[ny][nx][EntitySlot.ANIMAL.idx()] != null;
+            if (destHasAnimal && !isCarnivoreOrParasite()) {
+                continue;
+            }
 
-            LinkedList<Entity> entities = map.getEntityMap().get(ny).get(nx);
-            for (Entity entity : entities) {
-                if (entity instanceof Plant) {
-                    hasPlant = true;
-                } else if (entity instanceof Water) {
-                    hasWater = true;
-                    currentWaterQuality = ((Water) entity).getWaterQuality();
-                }
+            Water w = (Water)grid[ny][nx][EntitySlot.WATER.idx()];
+            Plant p = (Plant)grid[ny][nx][EntitySlot.PLANT.idx()];
+            boolean hasPlant = (p != null && p.getScannedTime() > 0);
+            boolean hasWater = (w != null && w.getScannedTime() > 0);
+            double currentWaterQuality = -1.0;
+            if (hasWater) {
+                w.calculateWaterQuality();
+                currentWaterQuality = w.getWaterQuality();
             }
 
             if (hasPlant && hasWater) {
@@ -74,100 +103,88 @@ public abstract class Animal extends Entity {
                     bestPW = new int[]{nx, ny};
                 }
             } else if (hasPlant) {
-                if (bestP == null) {
-                    bestP = new int[]{nx, ny};
-                }
+                if (bestP == null) bestP = new int[]{nx, ny};
             } else if (hasWater) {
                 if (currentWaterQuality > maxQwW) {
                     maxQwW = currentWaterQuality;
                     bestW = new int[]{nx, ny};
                 }
             } else {
-                if (bestAny == null) {
-                    bestAny = new int[]{nx, ny};
-                }
+                if (bestAny == null) bestAny = new int[]{nx, ny};
             }
         }
-
-        int[] target;
         if (bestPW != null) {
-            target = bestPW;
-        } else if (bestP != null) {
-            target = bestP;
-        } else if (bestW != null) {
-            target = bestW;
-        } else {
-            target = bestAny;
+            grid[bestPW[1]][bestPW[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
         }
-
-        if (target != null) {
-            map.getEntityMap().get(y).get(x).remove(this);
-            map.getEntityMap().get(target[1]).get(target[0]).add(this);
+        if (bestP != null) {
+            grid[bestP[1]][bestP[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
         }
+        if (bestW != null) {
+            grid[bestW[1]][bestW[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
+        }
+        grid[bestAny[1]][bestAny[0]][EntitySlot.ANIMAL.idx()] = this;
+        grid[y][x][EntitySlot.ANIMAL.idx()] = null;
     }
 
-    public void feed(SimulationMap map, int x, int y) {
-        LinkedList<Entity> entities = map.getEntityMap().get(y).get(x);
-        Plant plant = null;
-        Water water = null;
-        for (Entity e : entities) {
-            if (e instanceof Plant && e.getScannedTime() != 0) {
-                plant = (Plant) e;
-            } else if (e instanceof Water && e.getScannedTime() != 0) {
-                water = (Water) e;
-            }
+    public void feed(int currentTime, SimulationMap map, int x, int y) {
+        Animal a = (Animal) map.getEntityMap()[y][x][EntitySlot.ANIMAL.idx()];
+        if (a.getScannedTime() == 0) {
+            return;
         }
 
-        int scannedPlantTime = 0, scannedWaterTime = 0;
-        if (plant != null) {
-            scannedPlantTime = plant.getScannedTime();
+        if (hasEaten) {
+            hasEaten = false;
+            return;
         }
-        if (water != null) {
-            scannedWaterTime = water.getScannedTime();
-        }
-        if (scannedPlantTime > 0 && scannedWaterTime > 0) {
-            entities.remove(plant);
 
+        Plant p = (Plant)map.getEntityMap()[y][x][EntitySlot.PLANT.idx()];
+        Water w = (Water)map.getEntityMap()[y][x][EntitySlot.WATER.idx()];
+        int scannedPlant = 0, scannedWater = 0;
+        if (p != null && p.getScannedTime() > 0) {
+            scannedPlant = p.getScannedTime();
+        }
+        if (w != null && w.getScannedTime() > 0) {
+            scannedWater = w.getScannedTime();
+        }
+
+        if (scannedPlant > 0 && scannedWater > 0) {
+            double plantMass = p.getMass();
+            map.getEntityMap()[y][x][EntitySlot.PLANT.idx()] = null;
             double intakeRate = 0.08;
-            double waterToDrink = Math.min(getMass() * intakeRate, water.getMass());
-            water.setMass(water.getMass() - waterToDrink);
-            if (water.getMass() <= 0) {
-                entities.remove(water);
+            double waterToDrink = Math.min(getMass() * intakeRate, w.getMass());
+            w.setMass(w.getMass() - waterToDrink);
+            if (w.getMass() <= 0) {
+                map.getEntityMap()[y][x][EntitySlot.WATER.idx()] = null;
             }
-            setMass(getMass() + waterToDrink + plant.getMass());
+            setMass(getMass() + waterToDrink + plantMass);
             nextOrganicMatter = 0.8;
             setState("well-fed");
-        } else if (scannedPlantTime > 0) {
-            entities.remove(plant);
-            setMass(getMass() + plant.getMass());
-            nextOrganicMatter = 0.5;
-            setState("well-fed");
-        } else if (scannedWaterTime > 0) {
-            double intakeRate = 0.08;
-            double waterToDrink = Math.min(getMass() * intakeRate, water.getMass());
-            water.setMass(water.getMass() - waterToDrink);
-            if (water.getMass() <= 0) {
-                entities.remove(water);
-            }
-            setMass(getMass() + waterToDrink);
-            nextOrganicMatter = 0.5;
-            setState("well-fed");
-        } else {
-            nextOrganicMatter = 0.0;
-            setState("hungry");
-        }
-    }
-
-    @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        if (nextOrganicMatter > 0) {
-            for (Entity e : entitiesList) {
-                if (e instanceof Soil s) {
-                    s.setOrganicMatter(s.getOrganicMatter() + nextOrganicMatter);
-                    s.calculateSoilQuality();
+        } else if (scannedPlant > 0 || scannedWater > 0) {
+            if (scannedWater >= scannedPlant) {
+                double intakeRate = 0.08;
+                double waterToDrink = Math.min(getMass() * intakeRate, w.getMass());
+                w.setMass(w.getMass() - waterToDrink);
+                if (w.getMass() <= 0) {
+                    map.getEntityMap()[y][x][EntitySlot.WATER.idx()] = null;
                 }
+                setMass(getMass() + waterToDrink);
+                nextOrganicMatter = 0.5;
+                setState("well-fed");
+            } else {
+                double plantMass = p.getMass();
+                map.getEntityMap()[y][x][EntitySlot.PLANT.idx()] = null;
+                setMass(getMass() + plantMass);
+                nextOrganicMatter = 0.5;
+                setState("well-fed");
             }
-            nextOrganicMatter = 0;
+        } else {
+            setState("hungry");
         }
     }
 }
@@ -181,13 +198,11 @@ class Herbivores extends Animal {
         super(animalInput);
         setBlockingPossibility(1.5);
     }
-
     public Herbivores(Herbivores other) {
         super(other);
     }
 
-    @Override
-    public Entity createDeepCopy() {
+    @Override public Entity createDeepCopy() {
         return new Herbivores(this);
     }
 }
@@ -210,25 +225,105 @@ class Carnivores extends Animal {
         return new Carnivores(this);
     }
 
-
     @Override
-    public void feed(SimulationMap map, int x, int y) {
-        LinkedList<Entity> entities = map.getEntityMap().get(y).get(x);
-        Animal prey = null;
+    public void move(int currentTime, SimulationMap map, int x, int y) {
+        Animal a = (Animal) map.getEntityMap()[y][x][EntitySlot.ANIMAL.idx()];
+        if ((currentTime - a.getLastMovedTime()) % 2 != 0 ||
+                a.getScannedTime() == 0) {
+            return;
+        }
 
-        for (Entity e : entities) {
-            if (e instanceof Animal && e != this) {
-                prey = (Animal) e;
+        a.setLastMovedTime(currentTime);
+        int[] dx = {0, 1, 0, -1};
+        int[] dy = {1, 0, -1, 0};
+        int[] bestPW = null, bestP = null, bestW = null, bestAny = null;
+        double maxQwPW = -1.0, maxQwW = -1.0;
+
+        Entity[][][] grid = map.getEntityMap();
+        for (int k = 0; k < 4; k++) {
+            int nx = x + dx[k];
+            int ny = y + dy[k];
+
+            if (nx < 0 || nx >= map.getWidth() || ny < 0 || ny >= map.getHeight()) {
+                continue;
+            }
+
+            Water w = (Water)grid[ny][nx][EntitySlot.WATER.idx()];
+            Plant p = (Plant)grid[ny][nx][EntitySlot.PLANT.idx()];
+            boolean hasPlant = (p != null && p.getScannedTime() > 0);
+            boolean hasWater = (w != null && w.getScannedTime() > 0);
+            double currentWaterQuality = -1.0;
+            if (hasWater) {
+                w.calculateWaterQuality();
+                currentWaterQuality = w.getWaterQuality();
+            }
+
+            if (hasPlant && hasWater) {
+                if (currentWaterQuality > maxQwPW) {
+                    maxQwPW = currentWaterQuality;
+                    bestPW = new int[]{nx, ny};
+                }
+            } else if (hasPlant) {
+                if (bestP == null) bestP = new int[]{nx, ny};
+            } else if (hasWater) {
+                if (currentWaterQuality > maxQwW) {
+                    maxQwW = currentWaterQuality;
+                    bestW = new int[]{nx, ny};
+                }
+            } else {
+                if (bestAny == null) bestAny = new int[]{nx, ny};
             }
         }
+
+        if (bestPW != null) {
+            Animal prey = (Animal) grid[bestPW[1]][bestPW[0]][EntitySlot.ANIMAL.idx()];
+            if (prey != null) {
+                setMass(getMass() + prey.getMass());
+                setNextOrganicMatter(0.5);
+                grid[bestPW[1]][bestPW[0]][EntitySlot.ANIMAL.idx()] = null;
+                setState("well-fed");
+                setHasEaten(true);
+            }
+            grid[bestPW[1]][bestPW[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
+        }
+        if (bestP != null) {
+            Animal prey = (Animal) grid[bestP[1]][bestP[0]][EntitySlot.ANIMAL.idx()];
+            if (prey != null) {
+                setMass(getMass() + prey.getMass());
+                setNextOrganicMatter(0.5);
+                grid[bestP[1]][bestP[0]][EntitySlot.ANIMAL.idx()] = null;
+                setState("well-fed");
+                setHasEaten(true);
+            }
+            grid[bestP[1]][bestP[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
+        }
+        if (bestW != null) {
+            Animal prey = (Animal) grid[bestW[1]][bestW[0]][EntitySlot.ANIMAL.idx()];
+            if (prey != null) {
+                setMass(getMass() + prey.getMass());
+                setNextOrganicMatter(0.5);
+                grid[bestW[1]][bestW[0]][EntitySlot.ANIMAL.idx()] = null;
+                setState("well-fed");
+                setHasEaten(true);
+            }
+            grid[bestW[1]][bestW[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
+        }
+        Animal prey = (Animal) grid[bestAny[1]][bestAny[0]][EntitySlot.ANIMAL.idx()];
         if (prey != null) {
             setMass(getMass() + prey.getMass());
             setNextOrganicMatter(0.5);
+            grid[bestAny[1]][bestAny[0]][EntitySlot.ANIMAL.idx()] = null;
             setState("well-fed");
-            entities.remove(prey);
-            return;
+            setHasEaten(true);
         }
-        super.feed(map, x, y);
+        grid[bestAny[1]][bestAny[0]][EntitySlot.ANIMAL.idx()] = this;
+        grid[y][x][EntitySlot.ANIMAL.idx()] = null;
     }
 }
 
@@ -289,25 +384,102 @@ class Parasites extends Animal {
     }
 
     @Override
-    public void feed(SimulationMap map, int x, int y) {
-        LinkedList<Entity> entities = map.getEntityMap().get(y).get(x);
-        Animal prey = null;
+    public void move(int currentTime, SimulationMap map, int x, int y) {
+        Animal a = (Animal) map.getEntityMap()[y][x][EntitySlot.ANIMAL.idx()];
+        if ((currentTime - a.getLastMovedTime()) % 2 != 0 ||
+                a.getScannedTime() == 0) {
+            return;
+        }
 
-        for (Entity e : entities) {
-            if (e instanceof Animal && e != this) {
-                prey = (Animal) e;
+        a.setLastMovedTime(currentTime);
+        int[] dx = {0, 1, 0, -1};
+        int[] dy = {1, 0, -1, 0};
+        int[] bestPW = null, bestP = null, bestW = null, bestAny = null;
+        double maxQwPW = -1.0, maxQwW = -1.0;
+
+        Entity[][][] grid = map.getEntityMap();
+        for (int k = 0; k < 4; k++) {
+            int nx = x + dx[k];
+            int ny = y + dy[k];
+
+            if (nx < 0 || nx >= map.getWidth() || ny < 0 || ny >= map.getHeight()) {
+                continue;
+            }
+
+            boolean hasPlant = grid[ny][nx][EntitySlot.PLANT.idx()] != null;
+            boolean hasWater = grid[ny][nx][EntitySlot.WATER.idx()] != null;
+            double currentWaterQuality = -1.0;
+            if (hasWater) {
+                Water w = (Water) grid[ny][nx][EntitySlot.WATER.idx()];
+                w.calculateWaterQuality();
+                currentWaterQuality = w.getWaterQuality();
+            }
+
+            if (hasPlant && hasWater) {
+                if (currentWaterQuality > maxQwPW) {
+                    maxQwPW = currentWaterQuality;
+                    bestPW = new int[]{nx, ny};
+                }
+            } else if (hasPlant) {
+                if (bestP == null) bestP = new int[]{nx, ny};
+            } else if (hasWater) {
+                if (currentWaterQuality > maxQwW) {
+                    maxQwW = currentWaterQuality;
+                    bestW = new int[]{nx, ny};
+                }
+            } else {
+                if (bestAny == null) bestAny = new int[]{nx, ny};
             }
         }
+
+        if (bestPW != null) {
+            Animal prey = (Animal) grid[bestPW[1]][bestPW[0]][EntitySlot.ANIMAL.idx()];
+            if (prey != null) {
+                setMass(getMass() + prey.getMass());
+                setNextOrganicMatter(0.5);
+                grid[bestPW[1]][bestPW[0]][EntitySlot.ANIMAL.idx()] = null;
+                setState("well-fed");
+                setHasEaten(true);
+            }
+            grid[bestPW[1]][bestPW[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
+        }
+        if (bestP != null) {
+            Animal prey = (Animal) grid[bestP[1]][bestP[0]][EntitySlot.ANIMAL.idx()];
+            if (prey != null) {
+                setMass(getMass() + prey.getMass());
+                setNextOrganicMatter(0.5);
+                grid[bestP[1]][bestP[0]][EntitySlot.ANIMAL.idx()] = null;
+                setState("well-fed");
+                setHasEaten(true);
+            }
+            grid[bestP[1]][bestP[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
+        }
+        if (bestW != null) {
+            Animal prey = (Animal) grid[bestW[1]][bestW[0]][EntitySlot.ANIMAL.idx()];
+            if (prey != null) {
+                setMass(getMass() + prey.getMass());
+                setNextOrganicMatter(0.5);
+                grid[bestW[1]][bestW[0]][EntitySlot.ANIMAL.idx()] = null;
+                setState("well-fed");
+                setHasEaten(true);
+            }
+            grid[bestW[1]][bestW[0]][EntitySlot.ANIMAL.idx()] = this;
+            grid[y][x][EntitySlot.ANIMAL.idx()] = null;
+            return;
+        }
+        Animal prey = (Animal) grid[bestAny[1]][bestAny[0]][EntitySlot.ANIMAL.idx()];
         if (prey != null) {
             setMass(getMass() + prey.getMass());
             setNextOrganicMatter(0.5);
+            grid[bestAny[1]][bestAny[0]][EntitySlot.ANIMAL.idx()] = null;
             setState("well-fed");
-            entities.remove(prey);
-            return;
+            setHasEaten(true);
         }
-        super.feed(map, x, y);
+        grid[bestAny[1]][bestAny[0]][EntitySlot.ANIMAL.idx()] = this;
+        grid[y][x][EntitySlot.ANIMAL.idx()] = null;
     }
 }
-
-
-

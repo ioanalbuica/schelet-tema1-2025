@@ -35,20 +35,17 @@ public class TerraBot {
             if (nx < 0 || nx >= map.getWidth() || ny < 0 || ny >= map.getHeight()) {
                 continue;
             }
-            LinkedList<Entity> entities = map.getEntityMap().get(ny).get(nx);
+            Entity[] entities = map.getEntityMap()[ny][nx];
             double mean = 0.0;
             int count = 0;
-            if (entities != null && !entities.isEmpty()) {
-                for (Entity entity : entities) {
-                    mean += entity.getBlockingPossibility();
-                    if (!(entity instanceof Water)) {
-                        count++;
-                    }
+            for (int i = EntitySlot.AIR.idx(); i <= EntitySlot.ANIMAL.idx(); i++) {
+                if (entities[i] != null && i != EntitySlot.WATER.idx()) {
+                    mean += entities[i].getBlockingPossibility();
+                    count++;
                 }
-                mean = Math.abs(mean / count);
-            } else {
-                mean = 0.0;
             }
+            mean = Math.abs(mean / count);
+
 
             int result = (int) Math.round(mean);
 

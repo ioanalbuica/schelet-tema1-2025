@@ -60,21 +60,20 @@ class FloweringPlants extends Plant {
     }
 
     @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        for (Entity entity : entitiesList) {
-            if (entity instanceof Air a) {
-                double maturityOxygenRate = 0.0;
-                if (this.getMaturityLevel() == 0) {
-                    maturityOxygenRate = 0.2;
-                } else if (this.getMaturityLevel() == 1) {
-                    maturityOxygenRate = 0.7;
-                } else if (this.getMaturityLevel() == 2) {
-                    maturityOxygenRate = 0.4;
-                }
-                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 6 + maturityOxygenRate) * 100.0) / 100.0);
-                a.calculateAirQuality();
-                a.setBlockingPossibility(a.getToxicityLevel());
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        Air air = (Air) map.getEntityMap()[y][x][EntitySlot.AIR.idx()];
+        if (air != null) {
+            double maturityOxygenRate = 0.0;
+            if (this.getMaturityLevel() == 0) {
+                maturityOxygenRate = 0.2;
+            } else if (this.getMaturityLevel() == 1) {
+                maturityOxygenRate = 0.7;
+            } else if (this.getMaturityLevel() == 2) {
+                maturityOxygenRate = 0.4;
             }
+            air.setOxygenLevel(Math.round((air.getOxygenLevel() + 6 + maturityOxygenRate) * 100.0) / 100.0);
+            air.calculateAirQuality();
+            air.setBlockingPossibility(air.getToxicityLevel());
         }
     }
 }
@@ -98,21 +97,20 @@ class GymnospermsPlants extends Plant {
     }
 
     @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        for (Entity entity : entitiesList) {
-            if (entity instanceof Air a) {
-                double maturityOxygenRate = 0.0;
-                if (this.getMaturityLevel() == 0) {
-                    maturityOxygenRate = 0.2;
-                } else if (this.getMaturityLevel() == 1) {
-                    maturityOxygenRate = 0.7;
-                } else if (this.getMaturityLevel() == 2) {
-                    maturityOxygenRate = 0.4;
-                }
-                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0 + maturityOxygenRate) * 100.0) / 100.0);
-                a.calculateAirQuality();
-                a.setBlockingPossibility(a.getToxicityLevel());
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        Air air = (Air) map.getEntityMap()[y][x][EntitySlot.AIR.idx()];
+        if (air != null) {
+            double maturityOxygenRate = 0.0;
+            if (this.getMaturityLevel() == 0) {
+                maturityOxygenRate = 0.2;
+            } else if (this.getMaturityLevel() == 1) {
+                maturityOxygenRate = 0.7;
+            } else if (this.getMaturityLevel() == 2) {
+                maturityOxygenRate = 0.4;
             }
+            air.setOxygenLevel(Math.round((air.getOxygenLevel() + maturityOxygenRate) * 100.0) / 100.0);
+            air.calculateAirQuality();
+            air.setBlockingPossibility(air.getToxicityLevel());
         }
     }
 }
@@ -136,21 +134,20 @@ class Ferns extends Plant {
     }
 
     @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        for (Entity entity : entitiesList) {
-            if (entity instanceof Air a) {
-                double maturityOxygenRate = 0.0;
-                if (this.getMaturityLevel() == 0) {
-                    maturityOxygenRate = 0.2;
-                } else if (this.getMaturityLevel() == 1) {
-                    maturityOxygenRate = 0.7;
-                } else if (this.getMaturityLevel() == 2) {
-                    maturityOxygenRate = 0.4;
-                }
-                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0 + maturityOxygenRate) * 100.0) / 100.0);
-                a.calculateAirQuality();
-                a.setBlockingPossibility(a.getToxicityLevel());
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        Air air = (Air) map.getEntityMap()[y][x][EntitySlot.AIR.idx()];
+        if (air != null) {
+            double maturityOxygenRate = 0.0;
+            if (this.getMaturityLevel() == 0) {
+                maturityOxygenRate = 0.2;
+            } else if (this.getMaturityLevel() == 1) {
+                maturityOxygenRate = 0.7;
+            } else if (this.getMaturityLevel() == 2) {
+                maturityOxygenRate = 0.4;
             }
+            air.setOxygenLevel(Math.round((air.getOxygenLevel() + maturityOxygenRate) * 100.0) / 100.0);
+            air.calculateAirQuality();
+            air.setBlockingPossibility(air.getToxicityLevel());
         }
     }
 }
@@ -174,21 +171,20 @@ class Mosses extends Plant {
     }
 
     @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        for (Entity entity : entitiesList) {
-            if (entity instanceof Air a) {
-                double maturityOxygenRate = 0.0;
-                if (this.getMaturityLevel() == 0) {
-                    maturityOxygenRate = 0.2;
-                } else if (this.getMaturityLevel() == 1) {
-                    maturityOxygenRate = 0.7;
-                } else if (this.getMaturityLevel() == 2) {
-                    maturityOxygenRate = 0.4;
-                }
-                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0.8 + maturityOxygenRate) * 100.0) / 100.0);
-                a.calculateAirQuality();
-                a.setBlockingPossibility(a.getToxicityLevel());
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        Air air = (Air) map.getEntityMap()[y][x][EntitySlot.AIR.idx()];
+        if (air != null) {
+            double maturityOxygenRate = 0.0;
+            if (this.getMaturityLevel() == 0) {
+                maturityOxygenRate = 0.2;
+            } else if (this.getMaturityLevel() == 1) {
+                maturityOxygenRate = 0.7;
+            } else if (this.getMaturityLevel() == 2) {
+                maturityOxygenRate = 0.4;
             }
+            air.setOxygenLevel(Math.round((air.getOxygenLevel() + 0.8 + maturityOxygenRate) * 100.0) / 100.0);
+            air.calculateAirQuality();
+            air.setBlockingPossibility(air.getToxicityLevel());
         }
     }
 }
@@ -212,21 +208,20 @@ class Algae extends Plant {
     }
 
     @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        for (Entity entity : entitiesList) {
-            if (entity instanceof Air a) {
-                double maturityOxygenRate = 0.0;
-                if (this.getMaturityLevel() == 0) {
-                    maturityOxygenRate = 0.2;
-                } else if (this.getMaturityLevel() == 1) {
-                    maturityOxygenRate = 0.7;
-                } else if (this.getMaturityLevel() == 2) {
-                    maturityOxygenRate = 0.4;
-                }
-                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0.5 + maturityOxygenRate) * 100.0) / 100.0);
-                a.calculateAirQuality();
-                a.setBlockingPossibility(a.getToxicityLevel());
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        Air air = (Air) map.getEntityMap()[y][x][EntitySlot.AIR.idx()];
+        if (air != null) {
+            double maturityOxygenRate = 0.0;
+            if (this.getMaturityLevel() == 0) {
+                maturityOxygenRate = 0.2;
+            } else if (this.getMaturityLevel() == 1) {
+                maturityOxygenRate = 0.7;
+            } else if (this.getMaturityLevel() == 2) {
+                maturityOxygenRate = 0.4;
             }
+            air.setOxygenLevel(Math.round((air.getOxygenLevel() + 0.5 + maturityOxygenRate) * 100.0) / 100.0);
+            air.calculateAirQuality();
+            air.setBlockingPossibility(air.getToxicityLevel());
         }
     }
 }

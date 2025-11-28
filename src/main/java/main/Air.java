@@ -3,6 +3,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.AirInput;
+import fileio.SimulationInput;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.LinkedList;
@@ -32,13 +33,10 @@ public abstract class Air extends Entity {
     abstract public void changeWeather(String type, String value);
 
     @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        for (Entity entity : entitiesList) {
-            if (entity instanceof Animal && entity.getScannedTime() != 0) {
-                if (isToxic) {
-                    ((Animal)entity).setState("sick");
-                }
-            }
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        Animal animal = (Animal) map.getEntityMap()[y][x][EntitySlot.ANIMAL.idx()];
+        if (animal != null && animal.getScannedTime() != 0 && isToxic) {
+            animal.setState("sick");
         }
     }
 

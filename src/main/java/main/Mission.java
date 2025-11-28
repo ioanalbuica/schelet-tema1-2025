@@ -27,7 +27,7 @@ public class Mission {
         while (true) {
             if (map != null) {
                 map.actualiseMap(time);
-                map.feedAnimals();
+                map.feedAnimals(time);
                 map.moveAnimals(time);
             }
 
@@ -76,8 +76,10 @@ public class Mission {
                     node.put("command", "printEnvConditions");
 
                     ObjectNode env = MAPPER.createObjectNode();
-                    for (Entity e : map.getEntityMap().get(terraBot.getY()).get(terraBot.getX())) {
-                        e.printEntity(MAPPER, env);
+                    for (Entity e : map.getEntityMap()[terraBot.getY()][terraBot.getX()]) {
+                        if (e != null) {
+                            e.printEntity(MAPPER, env);
+                        }
                     }
                     node.set("output", env);
                     node.put("timestamp", cmd.getTimestamp());
@@ -98,11 +100,14 @@ public class Mission {
                             sectionNode.set("section", sectionCoords);
 
                             int nr = 0;
-                            java.util.List<Entity> entities = map.getEntityMap().get(y).get(x);
-                            for (Entity e : entities) {
-                                if (e instanceof Plant || e instanceof Animal || e instanceof Water) {
-                                    nr++;
-                                }
+                            if (map.getEntityMap()[y][x][EntitySlot.WATER.idx()] != null) {
+                                nr++;
+                            }
+                            if (map.getEntityMap()[y][x][EntitySlot.PLANT.idx()] != null) {
+                                nr++;
+                            }
+                            if (map.getEntityMap()[y][x][EntitySlot.ANIMAL.idx()] != null) {
+                                nr++;
                             }
                             sectionNode.put("totalNrOfObjects", nr);
                             sectionNode.put("airQuality", map.getAirQualityLabel(x, y));
@@ -205,37 +210,39 @@ public class Mission {
                     }
                     boolean found = false;
                     String type = null;
+
+                    Entity[] cellSlots = map.getEntityMap()[terraBot.getY()][terraBot.getX()];
+
                     if (!cmd.getSound().equals("none")) {
-                        for (Entity entity : map.getEntityMap().get(terraBot.getY()).get(terraBot.getX())) {
-                            if (entity instanceof Animal) {
-                                entity.setScannedTime(time);
-                                type = "an animal.";
-                                found = true;
-                                terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 7);
-                                terraBot.getInventory().add(entity.createDeepCopy());
-                            }
+                        Entity e = cellSlots[EntitySlot.ANIMAL.idx()];
+                        if (e != null) {
+                            e.setScannedTime(time);
+                            type = "an animal.";
+                            found = true;
+                            terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 7);
+                            terraBot.getInventory().add(e.createDeepCopy());
+                            ((Animal)e).setLastMovedTime(time);
                         }
                     } else if (!cmd.getSmell().equals("none")) {
-                        for (Entity entity : map.getEntityMap().get(terraBot.getY()).get(terraBot.getX())) {
-                            if (entity instanceof Plant) {
-                                entity.setScannedTime(time);
-                                type = "a plant.";
-                                found = true;
-                                terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 7);
-                                terraBot.getInventory().add(entity.createDeepCopy());
-                            }
+                        Entity e = cellSlots[EntitySlot.PLANT.idx()];
+                        if (e != null) {
+                            e.setScannedTime(time);
+                            type = "a plant.";
+                            found = true;
+                            terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 7);
+                            terraBot.getInventory().add(e.createDeepCopy());
                         }
                     } else {
-                        for (Entity entity : map.getEntityMap().get(terraBot.getY()).get(terraBot.getX())) {
-                            if (entity instanceof Water) {
-                                entity.setScannedTime(time);
-                                type = "water.";
-                                found = true;
-                                terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 7);
-                                terraBot.getInventory().add(entity.createDeepCopy());
-                            }
+                        Entity e = cellSlots[EntitySlot.WATER.idx()];
+                        if (e != null) {
+                            e.setScannedTime(time);
+                            type = "water.";
+                            found = true;
+                            terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 7);
+                            terraBot.getInventory().add(e.createDeepCopy());
                         }
                     }
+
                     if (!found) {
                         ObjectNode node = MAPPER.createObjectNode();
                         node.put("command", "scanObject");
@@ -399,43 +406,42 @@ public class Mission {
                     }
 
                     terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 10);
-                    LinkedList<Entity> cellEntities = map.getEntityMap().get(terraBot.getY()).get(terraBot.getX());
+
+                    // Access relevant slots directly
+                    Entity[] cellSlots = map.getEntityMap()[terraBot.getY()][terraBot.getX()];
+
                     String successMessage = "";
 
                     if (improvementType.equals("plantVegetation")) {
-                        for (Entity e : cellEntities) {
-                            if (e instanceof Air a) {
-                                a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0.3) * 100.0) / 100.0);
-                                a.calculateAirQuality();
-                                a.setBlockingPossibility(a.getToxicityLevel());
-                            }
+                        Air a = (Air) cellSlots[EntitySlot.AIR.idx()];
+                        if (a != null) {
+                            a.setOxygenLevel(Math.round((a.getOxygenLevel() + 0.3) * 100.0) / 100.0);
+                            a.calculateAirQuality();
+                            a.setBlockingPossibility(a.getToxicityLevel());
                         }
                         successMessage = "The " + componentName + " was planted successfully.";
                     } else if (improvementType.equals("fertilizeSoil")) {
-                        for (Entity e : cellEntities) {
-                            if (e instanceof Soil s) {
-                                s.setOrganicMatter(Math.round((s.getOrganicMatter() + 0.3) * 100.0) / 100.0);
-                                s.calculateSoilQuality();
-                                s.calculateBlockingPossibility();
-                            }
+                        Soil s = (Soil) cellSlots[EntitySlot.SOIL.idx()];
+                        if (s != null) {
+                            s.setOrganicMatter(Math.round((s.getOrganicMatter() + 0.3) * 100.0) / 100.0);
+                            s.calculateSoilQuality();
+                            s.calculateBlockingPossibility();
                         }
                         successMessage = "The soil was successfully fertilized using " + componentName + ".";
                     } else if (improvementType.equals("increaseHumidity")) {
-                        for (Entity e : cellEntities) {
-                            if (e instanceof Air a) {
-                                a.setHumidity(Math.round((a.getHumidity() + 0.2) * 100.0) / 100.0);
-                                a.calculateAirQuality();
-                                a.setBlockingPossibility(a.getToxicityLevel());
-                            }
+                        Air a = (Air) cellSlots[EntitySlot.AIR.idx()];
+                        if (a != null) {
+                            a.setHumidity(Math.round((a.getHumidity() + 0.2) * 100.0) / 100.0);
+                            a.calculateAirQuality();
+                            a.setBlockingPossibility(a.getToxicityLevel());
                         }
                         successMessage = "The humidity was successfully increased using " + componentName + ".";
                     } else if (improvementType.equals("increaseMoisture")) {
-                        for (Entity e : cellEntities) {
-                            if (e instanceof Soil s) {
-                                s.setWaterRetention(Math.round((s.getWaterRetention() + 0.2) * 100.0) / 100.0);
-                                s.calculateSoilQuality();
-                                s.calculateBlockingPossibility();
-                            }
+                        Soil s = (Soil) cellSlots[EntitySlot.SOIL.idx()];
+                        if (s != null) {
+                            s.setWaterRetention(Math.round((s.getWaterRetention() + 0.2) * 100.0) / 100.0);
+                            s.calculateSoilQuality();
+                            s.calculateBlockingPossibility();
                         }
                         successMessage = "The moisture was successfully increased using " + componentName;
                     }

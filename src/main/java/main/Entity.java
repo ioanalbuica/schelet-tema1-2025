@@ -17,7 +17,7 @@ public abstract class Entity {
     private double blockingPossibility;
     private int scannedTime = 0;
 
-    abstract public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList);
+    abstract public void changeEnvironment(int currentTime, SimulationMap map, int x, int y);
     abstract public void printEntity(ObjectMapper MAPPER, ObjectNode env);
     public abstract Entity createDeepCopy();
 }

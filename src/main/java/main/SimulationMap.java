@@ -14,21 +14,14 @@ import lombok.NoArgsConstructor;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class SimulationMap {
     private int height, width;
-    private ArrayList<ArrayList<LinkedList<Entity>>> entityMap;
+    private final int MAX_ENT = 5;
+    private Entity[][][] entityMap = null;
 
     public SimulationMap(SimulationInput simInput) {
         int x_pos = simInput.getTerritoryDim().indexOf('x');
         height = Integer.parseInt(simInput.getTerritoryDim().substring(0, x_pos));
         width = Integer.parseInt(simInput.getTerritoryDim().substring(x_pos + 1));
-
-        entityMap = new ArrayList<>(height);
-        for (int i = 0; i < height; i++) {
-            ArrayList<LinkedList<Entity>> row = new ArrayList<>(width);
-            for (int j = 0; j < width; j++) {
-                row.add(new LinkedList<>());
-            }
-            entityMap.add(row);
-        }
+        entityMap = new Entity[height][width][MAX_ENT];
 
         for (AirInput airInput: simInput.getTerritorySectionParams().getAir()) {
             for (PairInput pos : airInput.getSections()) {
@@ -42,7 +35,7 @@ public class SimulationMap {
                 }
                 if (air != null) {
                     air.setScannedTime(1);
-                    entityMap.get(pos.getY()).get(pos.getX()).add(air);
+                    entityMap[pos.getY()][pos.getX()][EntitySlot.AIR.idx()] = air;
                 }
             }
         }
@@ -59,25 +52,25 @@ public class SimulationMap {
                 }
                 if (soil != null) {
                     soil.setScannedTime(1);
-                    entityMap.get(pos.getY()).get(pos.getX()).add(soil);
+                    entityMap[pos.getY()][pos.getX()][EntitySlot.SOIL.idx()] = soil;
                 }
             }
         }
 
         for (WaterInput waterInput : simInput.getTerritorySectionParams().getWater()) {
             for (PairInput pos : waterInput.getSections()) {
-                entityMap.get(pos.getY()).get(pos.getX()).add(new Water(waterInput));
+                entityMap[pos.getY()][pos.getX()][EntitySlot.WATER.idx()] = new Water(waterInput);
             }
         }
 
         for (PlantInput plantInput : simInput.getTerritorySectionParams().getPlants()) {
             for (PairInput pos : plantInput.getSections()) {
                 switch (plantInput.getType()) {
-                    case "FloweringPlants" -> entityMap.get(pos.getY()).get(pos.getX()).add(new FloweringPlants(plantInput));
-                    case "GymnospermsPlants" -> entityMap.get(pos.getY()).get(pos.getX()).add(new GymnospermsPlants(plantInput));
-                    case "Ferns" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Ferns(plantInput));
-                    case "Mosses" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Mosses(plantInput));
-                    case "Algae" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Algae(plantInput));
+                    case "FloweringPlants" -> entityMap[pos.getY()][pos.getX()][EntitySlot.PLANT.idx()] = new FloweringPlants(plantInput);
+                    case "GymnospermsPlants" -> entityMap[pos.getY()][pos.getX()][EntitySlot.PLANT.idx()] = new GymnospermsPlants(plantInput);
+                    case "Ferns" -> entityMap[pos.getY()][pos.getX()][EntitySlot.PLANT.idx()] = new Ferns(plantInput);
+                    case "Mosses" -> entityMap[pos.getY()][pos.getX()][EntitySlot.PLANT.idx()] = new Mosses(plantInput);
+                    case "Algae" -> entityMap[pos.getY()][pos.getX()][EntitySlot.PLANT.idx()] = new Algae(plantInput);
                 }
             }
         }
@@ -85,45 +78,41 @@ public class SimulationMap {
         for (AnimalInput animalInput : simInput.getTerritorySectionParams().getAnimals()) {
             for (PairInput pos : animalInput.getSections()) {
                 switch (animalInput.getType()) {
-                    case "Herbivores" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Herbivores(animalInput));
-                    case "Carnivores" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Carnivores(animalInput));
-                    case "Omnivores" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Omnivores(animalInput));
-                    case "Detritivores" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Detritivores(animalInput));
-                    case "Parasites" -> entityMap.get(pos.getY()).get(pos.getX()).add(new Parasites(animalInput));
+                    case "Herbivores" -> entityMap[pos.getY()][pos.getX()][EntitySlot.ANIMAL.idx()] = new Herbivores(animalInput);
+                    case "Carnivores" -> entityMap[pos.getY()][pos.getX()][EntitySlot.ANIMAL.idx()] = new Carnivores(animalInput);
+                    case "Omnivores" -> entityMap[pos.getY()][pos.getX()][EntitySlot.ANIMAL.idx()] = new Omnivores(animalInput);
+                    case "Detritivores" -> entityMap[pos.getY()][pos.getX()][EntitySlot.ANIMAL.idx()] = new Detritivores(animalInput);
+                    case "Parasites" -> entityMap[pos.getY()][pos.getX()][EntitySlot.ANIMAL.idx()] = new Parasites(animalInput);
                 }
             }
         }
     }
 
     public String getSoilQualityLabel(int x, int y) {
-        for (Entity e : entityMap.get(y).get(x)) {
-            if (e instanceof Soil) {
-                Soil s = (Soil)e;
-                double sq = s.getSoilQuality();
-                if (sq >= 70) {
-                    return "good";
-                } else if (sq >= 40) {
-                    return "moderate";
-                } else {
-                    return "poor";
-                }
+        if (entityMap[y][x][EntitySlot.SOIL.idx()] != null) {
+            Soil s = (Soil)entityMap[y][x][EntitySlot.SOIL.idx()];
+            double sq = s.getSoilQuality();
+            if (sq >= 70) {
+                return "good";
+            } else if (sq >= 40) {
+                return "moderate";
+            } else {
+                return "poor";
             }
         }
         return null;
     }
 
     public String getAirQualityLabel(int x, int y) {
-        for (Entity e : entityMap.get(y).get(x)) {
-            if (e instanceof Air) {
-                Air a = (Air)e;
-                double aq = a.getAirQuality();
-                if (aq >= 70) {
-                    return "good";
-                } else if (aq >= 40) {
-                    return "moderate";
-                } else {
-                    return "poor";
-                }
+        Air a = (Air) entityMap[y][x][EntitySlot.AIR.idx()];
+        if (a != null) {
+            double aq = a.getAirQuality();
+            if (aq >= 70) {
+                return "good";
+            } else if (aq >= 40) {
+                return "moderate";
+            } else {
+                return "poor";
             }
         }
         return null;
@@ -132,11 +121,9 @@ public class SimulationMap {
     public void changeMapWeather(String type, String value) {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                LinkedList <Entity> entities = entityMap.get(i).get(j);
-                for (Entity e : entities) {
-                    if (e instanceof Air) {
-                        ((Air) e).changeWeather(type, value);
-                    }
+                Air a = (Air) entityMap[i][j][EntitySlot.AIR.idx()];
+                if (a != null) {
+                    a.changeWeather(type, value);
                 }
             }
         }
@@ -145,13 +132,22 @@ public class SimulationMap {
     public void actualiseMap(int currentTime) {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                LinkedList<Entity> entities = entityMap.get(i).get(j);
-                LinkedList<Entity> entitiesCopy = new LinkedList<>(entities);
-
-                for (Entity entity : entitiesCopy) {
-                    if (entities.contains(entity) && entity.getScannedTime() != 0) {
-                        entity.changeEnvironment(currentTime, entities);
+                for (int k = EntitySlot.AIR.idx(); k <= EntitySlot.ANIMAL.idx(); k++) {
+                    Entity entity = entityMap[i][j][k];
+                    if (entity != null && entity.getScannedTime() > 0) {
+                        entity.changeEnvironment(currentTime, this, j, i);
                     }
+                }
+            }
+        }
+    }
+
+    public void feedAnimals(int currentTime) {
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                Animal animal = (Animal) entityMap[i][j][EntitySlot.ANIMAL.idx()];
+                if (animal != null && animal.getScannedTime() > 0) {
+                    animal.feed(currentTime, this, j, i);
                 }
             }
         }
@@ -160,30 +156,10 @@ public class SimulationMap {
     public void moveAnimals(int currentTime) {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                LinkedList<Entity> entities = entityMap.get(i).get(j);
-                LinkedList<Entity> entitiesCopy = new LinkedList<>(entities);
-
-                for (Entity entity : entitiesCopy) {
-                    if (entities.contains(entity) && entity instanceof Animal a && entity.getScannedTime() != 0) {
-                        if ((currentTime - a.getScannedTime()) % 2 == 0) {
-                            a.move(this, j, i);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public void feedAnimals() {
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                LinkedList<Entity> entities = entityMap.get(i).get(j);
-                LinkedList<Entity> entitiesCopy = new LinkedList<>(entities);
-
-                for (Entity entity : entitiesCopy) {
-                    if (entities.contains(entity) && entity instanceof Animal a && entity.getScannedTime() != 0) {
-                        a.feed(this, j, i);
-                    }
+                Animal animal = (Animal) entityMap[i][j][EntitySlot.ANIMAL.idx()];
+                if (animal != null && animal.getScannedTime() > 0 && (currentTime - animal.getLastMovedTime()) % 2 == 0 &&
+                        (currentTime != animal.getLastMovedTime())) {
+                    animal.move(currentTime, this, j, i);
                 }
             }
         }

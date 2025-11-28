@@ -30,17 +30,16 @@ public abstract class Soil extends Entity {
     }
 
     @Override
-    public void changeEnvironment(int currentTime, LinkedList<Entity> entitiesList) {
-        for (Entity entity : entitiesList) {
-            if (entity instanceof Plant p && p.getScannedTime() > 0) {
-                p.setGrowthLevel(p.getGrowthLevel() + 0.2);
-                if (p.getGrowthLevel() >= 1.0) {
-                    p.setGrowthLevel(0.0);
-                    p.setMaturityLevel(p.getMaturityLevel() + 1);
-                }
-                if (p.getMaturityLevel() == 3) {
-                    entitiesList.remove(entity);
-                }
+    public void changeEnvironment(int currentTime, SimulationMap map, int x, int y) {
+        Plant p = (Plant)map.getEntityMap()[y][x][EntitySlot.PLANT.idx()];
+        if (p != null && p.getScannedTime() > 0) {
+            p.setGrowthLevel(p.getGrowthLevel() + 0.2);
+            if (p.getGrowthLevel() >= 1.0) {
+                p.setGrowthLevel(0.0);
+                p.setMaturityLevel(p.getMaturityLevel() + 1);
+            }
+            if (p.getMaturityLevel() == 3) {
+                map.getEntityMap()[y][x][EntitySlot.PLANT.idx()] = null;
             }
         }
     }
