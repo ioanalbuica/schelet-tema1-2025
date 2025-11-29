@@ -198,6 +198,7 @@ class Herbivores extends Animal {
         super(animalInput);
         setBlockingPossibility(1.5);
     }
+
     public Herbivores(Herbivores other) {
         super(other);
     }
@@ -406,11 +407,12 @@ class Parasites extends Animal {
                 continue;
             }
 
-            boolean hasPlant = grid[ny][nx][EntitySlot.PLANT.idx()] != null;
-            boolean hasWater = grid[ny][nx][EntitySlot.WATER.idx()] != null;
+            Water w = (Water)grid[ny][nx][EntitySlot.WATER.idx()];
+            Plant p = (Plant)grid[ny][nx][EntitySlot.PLANT.idx()];
+            boolean hasPlant = (p != null && p.getScannedTime() > 0);
+            boolean hasWater = (w != null && w.getScannedTime() > 0);
             double currentWaterQuality = -1.0;
             if (hasWater) {
-                Water w = (Water) grid[ny][nx][EntitySlot.WATER.idx()];
                 w.calculateWaterQuality();
                 currentWaterQuality = w.getWaterQuality();
             }

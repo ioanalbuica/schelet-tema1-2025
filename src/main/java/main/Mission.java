@@ -30,6 +30,13 @@ public class Mission {
                 map.feedAnimals(time);
                 map.moveAnimals(time);
             }
+            if (!weatherChangeOver && time - changedWeatherStart >= 2) {
+                weatherChangeOver = true;
+                // revert weather by calling map.changeMapWeather with "0"
+                if (weatherType != null && map != null) {
+                    map.changeMapWeather(weatherType, "0");
+                }
+            }
 
             CommandInput cmd = cmds.get(cmd_index);
             if (cmd.getTimestamp() == time) {
@@ -171,7 +178,8 @@ public class Mission {
                 } else if (cmd.getCommand().equals("changeWeatherConditions")) {
                     weatherChangeOver = false;
                     String value = "0";
-                    weatherType = cmd.getType();
+                    weatherType = cmd.getType() != null ? cmd.getType().trim() : "";
+
                     if (weatherType.equals("rainfall")) {
                         value = Double.toString(cmd.getRainfall());
                     } else if (weatherType.equals("polarStorm")) {
@@ -183,6 +191,57 @@ public class Mission {
                     } else if (weatherType.equals("peopleHiking")) {
                         value = Integer.toString(cmd.getNumberOfHikers());
                     }
+
+                    boolean airFound = false;
+                    if (map != null) {
+                        Entity[][][] grid = map.getEntityMap();
+                        for (int i = 0; i < map.getHeight() && !airFound; i++) {
+                            for (int j = 0; j < map.getWidth() && !airFound; j++) {
+                                Air a = (Air) grid[i][j][EntitySlot.AIR.idx()];
+                                if (weatherType.equals("polarStorm")) {
+                                    if (a.getType().equals("PolarAir")) {
+                                        airFound = true;
+                                    }
+                                } else if (weatherType.equals("desertStorm")) {
+                                    if (a.getType().equals("DesertAir")) {
+                                        airFound = true;
+                                    }
+                                } else if (weatherType.equals("rainfall")) {
+                                    if (a.getType().equals("TropicalAir")) {
+                                        airFound = true;
+                                    }
+                                } else if (weatherType.equals("newSeason")) {
+                                    if (a.getType().equals("TemperateAir")) {
+                                        airFound = true;
+                                    }
+                                } else if (weatherType.equals("peopleHiking")) {
+                                    if (a.getType().equals("MountainAir")) {
+                                        airFound = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!airFound) {
+                        // return error node and DO NOT change map weather
+                        ObjectNode Node = MAPPER.createObjectNode();
+                        Node.put("command", "changeWeatherConditions");
+                        Node.put("message", "ERROR: The weather change does not affect the environment. Cannot perform action");
+                        Node.put("timestamp", cmd.getTimestamp());
+                        output.add(Node);
+
+                        // keep weatherChangeOver as true (we didn't apply it)
+                        weatherChangeOver = true;
+                        // advance to next command/time just like other error branches
+                        cmd_index++;
+                        if (cmd_index == cmds.size()) {
+                            break;
+                        }
+                        time++;
+                        continue;
+                    }
+
                     map.changeMapWeather(weatherType, value);
                     changedWeatherStart = cmd.getTimestamp();
 
@@ -191,14 +250,11 @@ public class Mission {
                     Node.put("message", "The weather has changed.");
                     Node.put("timestamp", cmd.getTimestamp());
                     output.add(Node);
-                } else if (!weatherChangeOver && time - changedWeatherStart >= 2) {
-                    weatherChangeOver = true;
-                    map.changeMapWeather(weatherType, "0");
                 } else if (cmd.getCommand().equals("scanObject")) {
                     if (terraBot.getBatteryLevel() < 7) {
                         ObjectNode node = MAPPER.createObjectNode();
                         node.put("command", "scanObject");
-                        node.put("message", "ERROR: Not enough battery left. Cannot perform action");
+                        node.put("message", "ERROR: Not enough energy to perform action");
                         node.put("timestamp", cmd.getTimestamp());
                         output.add(node);
                         cmd_index++;
@@ -295,36 +351,32 @@ public class Mission {
                         output.add(node);
                     }
                 } else if (cmd.getCommand().equals("printKnowledgeBase")) {
-                    ObjectNode node = MAPPER.createObjectNode();
-                    node.put("command", "printKnowledgeBase");
+                ObjectNode node = MAPPER.createObjectNode();
+                node.put("command", "printKnowledgeBase");
 
-                    ArrayNode outputArray = MAPPER.createArrayNode();
-                    List<String> processedTopics = new ArrayList<>();
+                ArrayNode outputArray = MAPPER.createArrayNode();
 
-                    if (terraBot.getInventory() != null) {
-                        for (Entity entity : terraBot.getInventory()) {
-                            String topicName = entity.getName();
+                if (terraBot.getKnowledgeBase() != null) {
+                    for (String topicName : terraBot.getKnowledgeBase().keySet()) {
+                        ObjectNode topicNode = MAPPER.createObjectNode();
+                        topicNode.put("topic", topicName);
 
-                            if (!processedTopics.contains(topicName) && terraBot.getKnowledgeBase().containsKey(topicName)) {
-                                ObjectNode topicNode = MAPPER.createObjectNode();
-                                topicNode.put("topic", topicName);
-
-                                ArrayNode factsArray = MAPPER.createArrayNode();
-                                List<String> facts = terraBot.getKnowledgeBase().get(topicName);
-                                for (String fact : facts) {
-                                    factsArray.add(fact);
-                                }
-
-                                topicNode.set("facts", factsArray);
-                                outputArray.add(topicNode);
-                                processedTopics.add(topicName);
-                            }
+                        ArrayNode factsArray = MAPPER.createArrayNode();
+                        List<String> facts = terraBot.getKnowledgeBase().get(topicName);
+                        for (String fact : facts) {
+                            factsArray.add(fact);
                         }
+
+                        topicNode.set("facts", factsArray);
+                        outputArray.add(topicNode);
                     }
-                    node.set("output", outputArray);
-                    node.put("timestamp", cmd.getTimestamp());
-                    output.add(node);
-                } else if (cmd.getCommand().equals("improveEnvironment")) {
+                }
+
+                node.set("output", outputArray);
+                node.put("timestamp", cmd.getTimestamp());
+                output.add(node);
+            }
+            else if (cmd.getCommand().equals("improveEnvironment")) {
                     if (terraBot.getBatteryLevel() < 10) {
                         ObjectNode node = MAPPER.createObjectNode();
                         node.put("command", "improveEnvironment");
@@ -332,9 +384,7 @@ public class Mission {
                         node.put("timestamp", cmd.getTimestamp());
                         output.add(node);
                         cmd_index++;
-                        if (cmd_index == cmds.size()) {
-                            break;
-                        }
+                        if (cmd_index == cmds.size()) break;
                         time++;
                         continue;
                     }
@@ -358,9 +408,7 @@ public class Mission {
                         node.put("timestamp", cmd.getTimestamp());
                         output.add(node);
                         cmd_index++;
-                        if (cmd_index == cmds.size()) {
-                            break;
-                        }
+                        if (cmd_index == cmds.size()) break;
                         time++;
                         continue;
                     }
@@ -373,14 +421,16 @@ public class Mission {
                             requiredFact = "Method to plant " + componentName;
                             break;
                         case "fertilizeSoil":
-                            requiredFact = "Method to fertilize " + componentName;
+                            requiredFact = "Method to fertilize with " + componentName;
                             break;
                         case "increaseHumidity":
-                            requiredFact = "Method to increase humidity " + componentName;
+                            requiredFact = "Method to increase humidity.";
                             break;
                         case "increaseMoisture":
                             requiredFact = "Method to increaseMoisture";
                             break;
+                        default:
+                            requiredFact = "";
                     }
 
                     boolean knowsFact = false;
@@ -398,16 +448,12 @@ public class Mission {
                         node.put("timestamp", cmd.getTimestamp());
                         output.add(node);
                         cmd_index++;
-                        if (cmd_index == cmds.size()) {
-                            break;
-                        }
+                        if (cmd_index == cmds.size()) break;
                         time++;
                         continue;
                     }
 
                     terraBot.setBatteryLevel(terraBot.getBatteryLevel() - 10);
-
-                    // Access relevant slots directly
                     Entity[] cellSlots = map.getEntityMap()[terraBot.getY()][terraBot.getX()];
 
                     String successMessage = "";
@@ -419,6 +465,7 @@ public class Mission {
                             a.calculateAirQuality();
                             a.setBlockingPossibility(a.getToxicityLevel());
                         }
+                        terraBot.getInventory().remove(componentFound);
                         successMessage = "The " + componentName + " was planted successfully.";
                     } else if (improvementType.equals("fertilizeSoil")) {
                         Soil s = (Soil) cellSlots[EntitySlot.SOIL.idx()];
@@ -427,7 +474,8 @@ public class Mission {
                             s.calculateSoilQuality();
                             s.calculateBlockingPossibility();
                         }
-                        successMessage = "The soil was successfully fertilized using " + componentName + ".";
+                        terraBot.getInventory().remove(componentFound);
+                        successMessage = "The soil was successfully fertilized using " + componentName;
                     } else if (improvementType.equals("increaseHumidity")) {
                         Air a = (Air) cellSlots[EntitySlot.AIR.idx()];
                         if (a != null) {
@@ -435,7 +483,7 @@ public class Mission {
                             a.calculateAirQuality();
                             a.setBlockingPossibility(a.getToxicityLevel());
                         }
-                        successMessage = "The humidity was successfully increased using " + componentName + ".";
+                        successMessage = "The humidity was successfully increased using " + componentName;
                     } else if (improvementType.equals("increaseMoisture")) {
                         Soil s = (Soil) cellSlots[EntitySlot.SOIL.idx()];
                         if (s != null) {

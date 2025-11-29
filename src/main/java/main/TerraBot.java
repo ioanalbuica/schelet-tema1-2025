@@ -12,7 +12,7 @@ public class TerraBot {
     private int x, y;
     private int batteryLevel;
     private ArrayList<Entity> inventory = new ArrayList<>();
-    private Map<String, List<String>> knowledgeBase = new HashMap<>();
+    private Map<String, List<String>> knowledgeBase = new LinkedHashMap<>();
 
     public void addFact(String entityName, String fact) {
         knowledgeBase.putIfAbsent(entityName, new ArrayList<>());
@@ -45,8 +45,6 @@ public class TerraBot {
                 }
             }
             mean = Math.abs(mean / count);
-
-
             int result = (int) Math.round(mean);
 
             if (result < minimum) {
