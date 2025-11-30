@@ -1,4 +1,4 @@
-package main;
+package main.entity;
 
 public enum EntitySlot {
     AIR(0),
@@ -9,7 +9,7 @@ public enum EntitySlot {
 
     private final int index;
 
-    EntitySlot(int index) {
+    EntitySlot(final int index) {
         this.index = index;
     }
 

@@ -3,16 +3,12 @@ package main;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.CommandInput;
 import fileio.InputLoader;
 import fileio.SimulationInput;
-
 import java.util.ArrayList;
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
-
 /**
  * The entry point to this homework. It runs the checker that tests your implementation.
  */

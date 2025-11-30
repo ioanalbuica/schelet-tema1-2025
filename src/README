@@ -1,0 +1,29 @@
+TEMA 1 POO
+Albuica Ioan Octavian 323CA
+
+Entitate:
+O entitate are caracteristici comune, precum nume, masa, prob de blocare a robotului si metode generice precum printarea sa,
+modul cum isi afecteaza entitatile vecine si o metoda de a crea o copie a sa(folosita pt a introduce in inventar).
+O entitate este impartita in mai multe tipuri, si ele la randul lor fiind impartite in categorii, cu diferente mici intre formule,
+dar comportamental asemanatoare, mai putin pentru animale carnivore si parazite unde mai trebuie verificat daca celula unde se muta
+mai contine deja un animal care va fi mancat.
+
+
+Design-ul hartii:
+O matrice de dimensiuni fixe, unde fiecare celula este un array de 5 entitati. Fiecare entitate are o pozitie fixa in functie de tip,
+iar daca nu apare in celula va fi notata cu null pozitia respectiva, asa avand loc si stergerea de pe harta a unei entitati.
+Punctul nostru (0,0) va fi in coltul din stanga sus, iar in enunt este in stanga jos, deci prioritatile de miscare ale animalelor si robotului
+vor fi jos, dreapta, sus, stanga in loc de sus, dreapta, jos, stanga.
+Acest model de harta ne ajuta deoarece daca nu am avea o pozitie fixa pt fiecare tip de entitate, ar trebui sa parcurgem de fiecare data lista
+si sa folosim ori instanceof ori o functie de getType pt a obtine tipul si faptul ca nu putem avea 2 entitati de acelasi tip pe o celula.
+Dezavantaj: orice array are dimensiunea 5 chiar daca poate are mai putine entitati, dar cum 5 este un nr mic este un dezavantaj minuscul.
+
+
+Desfasurarea simularii si prelucrarea comenzilor
+In functia run, am considerat un contor time pentru a retine timpul curent, un index pt comenzi si simulari. Daca time-ul ajunge
+la comanda curenta, efectuam comanda, daca aceasta era startSimulation si e valida vom creste index simularii si creeam noua harta folosind
+noua simulare. Functia se opreste cand am efectuat toate comenzile. La inceputul fiecarui timp efectuam schimbarile pe care le fac entitatile scanate,
+apoi se desfasoara algoritmul de hranire si miscare al animalelor.
+
+Parti cu AI:
+La move animal si robot mi-a recomandat sa folosesc vectorii de directie dx si dy decat sa verific cu if daca se afla la margini.
